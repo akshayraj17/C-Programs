@@ -1,0 +1,24 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "bmp.h"
+#include "filter.h"
+#include "validate.c"
+
+int main (int argc, char ** argv) {
+	if (argc != 3) {
+		fprintf(stderr, "Error: wrong number of arguments\n");
+		fprintf(stderr, "Usage: ./pa13 <input file> <output file>");
+	}
+	
+	FILE * orignal = fopen(argv[1],"r");
+	FILE * mod_img = fopen(argv[2],"w");
+	BMPImage * peace = readImage(orignal);
+	BMPImage * blurredlines = blur(peace);
+	writeImage(blurredlines,mod_img);
+	freeImage(peace);
+	freeImage(blurredlines);
+	fclose(orignal);
+	fclose(mod_img);
+	
+	return EXIT_SUCCESS;
+}

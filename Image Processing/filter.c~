@@ -1,0 +1,288 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include "filter.h"
+#include "string.h"
+
+#ifndef BLUR_OFF
+BMPImage * blur(BMPImage * image) {
+
+	BoxFilter b;	
+	int i,j,ind1,ind2;
+	//create box blur 2D array
+	for( i=0; i < 3; i++)
+	{
+		for(j = 0; j< 3; j++)
+			b.filter[i][j] = 1;
+	}
+	b.norm = 9;
+
+
+	//allocate space for copy
+	BMPImage * copy = malloc(sizeof(BMPImage));
+	memcpy( &copy -> header , &image -> header,54);
+	copy -> norm_height = image -> norm_height;
+	copy  -> pixels = malloc(image->norm_height * sizeof(Pixel *));
+	
+	for(ind1 = 0; ind1 < image->norm_height; ind1++)
+	{
+		copy -> pixels[ind1] = malloc(image->header.width_px * sizeof(Pixel));
+	}
+		for(ind1 = 0; ind1 < image -> norm_height; ind1++)
+		{
+			for( ind2 = 0; ind2 < image ->header.width_px ; ind2++)
+			copy -> pixels[ind1][ind2] =  image -> pixels[ind1][ind2]; 
+		}
+		
+	//blurred lines
+		int left,right,top,bottom;
+		int totalb,totala,totalr,totalg;
+
+	for( i=0; i < image -> norm_height-1; i++)
+	{
+		for(j = 0; j < image -> header.width_px-1; j++)
+		{	
+			totala = 0; 
+			totalb = 0;
+			totalr = 0;
+			totalg = 0;
+			top = i-1;
+			bottom = i+1;
+			left = j-1;
+			right = j+1;
+			 
+			
+			 	if( left < 0)
+			 	{
+			 		left = j;
+			 	}
+			 
+				if( top < 0)
+				{
+					top = i;
+				}
+			 
+			 
+			  if( bottom >= image-> header.width_px)
+			  {
+			      bottom  = i;
+			  }
+			 
+			 if(  right >= image -> norm_height)
+			 {
+			 	 right = j;
+			 }
+			 
+
+				totalb = (image -> pixels[top][left].blue)*( b.filter[0][0]) + (image -> pixels[top][j].blue)*(b.filter[0][1]) +
+						 (image -> pixels[i][left].blue)*( b.filter[1][0]) + (image -> pixels[i][j].blue)*(b.filter[1][1]) +
+						 (image -> pixels[i][right].blue)*( b.filter[1][2]) + (image -> pixels[bottom][left].blue)*(b.filter[2][0]) +
+						 (image -> pixels[bottom][j].blue)*( b.filter[2][1]) + (image -> pixels[bottom][right].blue)*(b.filter[2][2]) +
+						 (image -> pixels[top][right].blue)*( b.filter[0][2]);
+				
+				totalr = (image -> pixels[top][left].red)*( b.filter[0][0]) + (image -> pixels[top][j].red)*(b.filter[0][1]) +
+						 (image -> pixels[i][left].red)*( b.filter[1][0]) + (image -> pixels[i][j].red)*(b.filter[1][1]) +
+						 (image -> pixels[i][right].red)*( b.filter[1][2]) + (image -> pixels[bottom][left].red)*(b.filter[2][0]) +
+						 (image -> pixels[bottom][j].red)*( b.filter[2][1]) + (image -> pixels[bottom][right].red)*(b.filter[2][2]) +
+						 (image -> pixels[top][right].red)*( b.filter[0][2]);
+
+				totalg = (image -> pixels[top][left].green)*( b.filter[0][0]) + (image -> pixels[top][j].green)*(b.filter[0][1]) +
+						 (image -> pixels[i][left].green)*( b.filter[1][0]) + (image -> pixels[i][j].green)*(b.filter[1][1]) +
+						 (image -> pixels[i][right].green)*( b.filter[1][2]) + (image -> pixels[bottom][left].green)*(b.filter[2][0]) +
+						 (image -> pixels[bottom][j].green)*( b.filter[2][1]) + (image -> pixels[bottom][right].green)*(b.filter[2][2]) +
+						 (image -> pixels[top][right].green)*( b.filter[0][2]);
+				
+				totala = (image -> pixels[top][left].alpha)*( b.filter[0][0]) + (image -> pixels[top][j].alpha)*(b.filter[0][1]) +
+						 (image -> pixels[i][left].alpha)*( b.filter[1][0]) + (image -> pixels[i][j].alpha)*(b.filter[1][1]) +
+						 (image -> pixels[i][right].alpha)*( b.filter[1][2]) + (image -> pixels[bottom][left].alpha)*(b.filter[2][0]) +
+						 (image -> pixels[bottom][j].alpha)*( b.filter[2][1]) + (image -> pixels[bottom][right].alpha)*(b.filter[2][2]) +
+						 (image -> pixels[top][right].alpha)*( b.filter[0][2]); 
+				          
+						 totalb = totalb/b.norm;
+						 totalr = totalr/b.norm;
+						 totalg = totalg/b.norm;
+						 totala = totala/b.norm;
+  
+						  if( totala > 255)
+						  totala = 255;
+						  if(totala < 0)
+						   totala = 0;
+						  if( totalb > 255)
+						  totalb = 255;
+						  if(totalb < 0)
+						   totalb = 0;
+						  if( totalg > 255)
+						  totalg = 255;
+						  if(totalg < 0)
+						   totalg = 0;
+						  if( totalr > 255)
+						  totalr = 255;
+						  if(totalr < 0)
+						   totalr = 0;
+
+
+
+						 copy -> pixels[i][j].blue = totalb;
+						 copy -> pixels[i][j].red = totalr;
+						 copy -> pixels[i][j].green = totalg;
+						 copy -> pixels[i][j].alpha = totala;
+							
+						 
+				 
+		}		
+			
+	} // end of outer for loop
+
+ return copy;
+
+
+
+}
+#endif
+
+// EXTRA CREDIT START
+BMPImage * apply(BMPImage * image, BoxFilter f) {
+
+	BoxFilter b;	
+	int i,j,ind1;
+	//create box blur 2D array
+	for( i=0; i < 3; i++)
+	{
+		for( j=0; j<3; j++)
+		{
+			b.filter[i][j] = f.filter[i][j];
+		
+		}
+	
+	}
+  
+	b.norm = f.norm;
+	
+
+	//allocate space for copy
+	BMPImage * copy = malloc(sizeof(BMPImage));
+	memcpy(&copy -> header,&image -> header,54);
+	copy -> norm_height = image -> norm_height;
+	copy  -> pixels = malloc(image->norm_height * sizeof(Pixel *));
+	
+	for(ind1 = 0; ind1 < image->norm_height; ind1++)
+	{
+		copy -> pixels[ind1] = malloc(image->header.width_px * sizeof(Pixel));
+	}
+
+
+	/*	for(ind1 = 0; ind1 < image -> norm_height; ind1++)
+		{
+			for( ind2 = 0; ind2 < image ->header.width_px ; ind2++)
+			copy -> pixels[ind1][ind2] =  image -> pixels[ind1][ind2]; 
+		}*/
+		//blurred lines
+		int left,right,top,bottom;
+		int totalb,totala,totalr,totalg;
+
+
+	for( i=0; i < image -> norm_height; i++)
+	{
+		for(j = 0; j < (int)image -> header.width_px; j++)
+		{	
+		left = j-1;
+		 right = j+1;
+		 top = i-1;
+		 bottom = i+1;
+			 
+			
+			 	if( left < 0)
+			 	{
+			 		left = 0;
+			 	}
+			 
+				if( top < 0)
+				{
+					top = 0;
+				}
+			 
+			 
+			  if( bottom >= image-> header.width_px)
+			  {
+			      bottom  = image->header.width_px-1;
+			  }
+			 
+			 if(  right >= image -> norm_height)
+			 {
+			 	 right = image->norm_height-1;
+			 }
+			 
+
+				totalb = (image -> pixels[top][left].blue)*( b.filter[0][0]) + (image -> pixels[top][j].blue)*(b.filter[0][1]) +
+						 (image -> pixels[i][left].blue)*( b.filter[1][0]) + (image -> pixels[i][j].blue)*(b.filter[1][1]) +
+						 (image -> pixels[i][right].blue)*( b.filter[1][2]) + (image -> pixels[bottom][left].blue)*(b.filter[2][0]) +
+						 (image -> pixels[bottom][j].blue)*( b.filter[2][1]) + (image -> pixels[bottom][right].blue)*(b.filter[2][2]) +
+						 (image -> pixels[top][right].blue)*( b.filter[0][2]);
+				
+				totalr = (image -> pixels[top][left].red)*( b.filter[0][0]) + (image -> pixels[top][j].red)*(b.filter[0][1]) +
+						 (image -> pixels[i][left].red)*( b.filter[1][0]) + (image -> pixels[i][j].red)*(b.filter[1][1]) +
+						 (image -> pixels[i][right].red)*( b.filter[1][2]) + (image -> pixels[bottom][left].red)*(b.filter[2][0]) +
+						 (image -> pixels[bottom][j].red)*( b.filter[2][1]) + (image -> pixels[bottom][right].red)*(b.filter[2][2]) +
+						 (image -> pixels[top][right].red)*( b.filter[0][2]);
+
+				totalg = (image -> pixels[top][left].green)*( b.filter[0][0]) + (image -> pixels[top][j].green)*(b.filter[0][1]) +
+						 (image -> pixels[i][left].green)*( b.filter[1][0]) + (image -> pixels[i][j].green)*(b.filter[1][1]) +
+						 (image -> pixels[i][right].green)*( b.filter[1][2]) + (image -> pixels[bottom][left].green)*(b.filter[2][0]) +
+						 (image -> pixels[bottom][j].green)*( b.filter[2][1]) + (image -> pixels[bottom][right].green)*(b.filter[2][2]) +
+						 (image -> pixels[top][right].green)*( b.filter[0][2]);
+				
+				totala = (image -> pixels[top][left].alpha)*( b.filter[0][0]) + (image -> pixels[top][j].alpha)*(b.filter[0][1]) +
+						 (image -> pixels[i][left].alpha)*( b.filter[1][0]) + (image -> pixels[i][j].alpha)*(b.filter[1][1]) +
+						 (image -> pixels[i][right].alpha)*( b.filter[1][2]) + (image -> pixels[bottom][left].alpha)*(b.filter[2][0]) +
+						 (image -> pixels[bottom][j].alpha)*( b.filter[2][1]) + (image -> pixels[bottom][right].alpha)*(b.filter[2][2]) +
+						 (image -> pixels[top][right].alpha)*( b.filter[0][2]); 
+				          
+						 totalb = totalb/b.norm;
+						 totalr = totalr/b.norm;
+						 totalg = totalg/b.norm;
+						 totala = totala/b.norm;
+  
+						  if( totala > 255)
+						  totala = 255;
+						  if(totala < 0)
+						   totala = 0;
+						  if( totalb > 255)
+						  totalb = 255;
+						  if(totalb < 0)
+						   totalb = 0;
+						  if( totalg > 255)
+						  totalg = 255;
+						  if(totalg < 0)
+						   totalg = 0;
+						  if( totalr > 255)
+						  totalr = 255;
+						  if(totalr < 0)
+						   totalr = 0;
+
+
+
+						 copy -> pixels[i][j].blue = totalb;
+						 copy -> pixels[i][j].red = totalr;
+						 copy -> pixels[i][j].green = totalg;
+						 copy -> pixels[i][j].alpha = totala;
+							
+						 
+				 
+		}		
+			
+	} // end of outer for loop
+   
+ return copy;
+
+
+
+}
+
+BoxFilter * readFilter(FILE * infile) {
+	
+	BoxFilter * filter = malloc(sizeof(BoxFilter));
+fscanf(infile, " %d %d %d \n  %d %d %d \n %d %d %d \n  %f \n", &(filter->filter[0][0]), &(filter->filter[0][1]), &(filter->filter[0][2]), &(filter->filter[1][0]), &(filter->filter[1][1]), &(filter->filter[1][2]), &(filter->filter[2][0]), &(filter->filter[2][1]), &(filter -> filter[2][2]), &(filter -> norm));
+
+return filter;
+
+}
+// EXTRA CREDIT END
