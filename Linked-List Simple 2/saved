@@ -1,0 +1,92 @@
+
+// initial test
+ 		if(strlen(path) == 0)
+		return false;
+		
+   //declarations
+	   int turnp1 = 0;
+	   int turnp2 = 0;
+	   int i = 0;
+	   PathNode * temp = buildNode(path);
+
+ 	//empty linked list case
+	 if ( paths -> head == NULL )
+	 {  
+        paths -> head = temp;
+		paths -> head -> next = NULL;
+		//freeNode(temp);
+		return true;
+	 }
+	 if ( paths -> head -> next == NULL) 
+ 	 {
+	  	PathNode * node5 = buildNode(path);
+		paths -> head -> next = node5;
+		node5 -> next = NULL;
+		return true;
+	 }
+
+    PathNode * curr = paths -> head;
+	while(  curr -> next != NULL)
+	 {
+	  	//length
+	   if( strlen(path) < strlen(curr -> next -> path) )
+		{   
+			if( curr == paths -> head)
+			{
+			}
+			else {
+		    PathNode * node1 = buildNode(path);	
+		    node1 -> next = curr -> next;	
+			curr -> next = node1;
+			return true; }
+		}
+		//turns
+ 		else if( strcmp(path, curr -> next -> path) == 0)
+		{
+		   for(i=1; path[i] != '\0' ; i++)
+		   {
+		     if(path[i-1] != path[i])
+			 turnp1 ++;
+		   }
+		   for( i =1; curr -> next -> path[i] != '\0';i++)
+{
+		     if( curr -> next -> path[i-1] != curr -> next -> path[i])
+			 turnp2 ++;
+		   }
+	       if(turnp1 <= turnp2 )
+		   {
+		   		 PathNode * node2 = buildNode(path);
+				 node2 -> next = curr -> next;
+				 curr -> next = node2;
+				 return true;
+		   }
+		   else
+		   {
+		     PathNode *node3 = buildNode(path);
+			 curr -> next -> next = node3;
+			 node3 -> next =  curr -> next -> next -> next;
+			 return true;
+		   }
+		   
+		
+		}
+        // alphabetic
+  		else if(strcmp(path, curr -> next -> path ) > 0  )
+		{  
+
+			if(strcmp(path, curr -> next -> path) < 0 )
+			{
+				PathNode * node4 = buildNode(path);
+				node4 -> next = curr -> next;
+				curr -> next = node4;
+				return true;
+			}
+
+	 	} 
+
+	curr  = curr -> next;
+	}	
+
+ return false;
+
+}
